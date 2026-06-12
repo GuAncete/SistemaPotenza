@@ -4,7 +4,7 @@ import { Loader2, ScanLine } from 'lucide-react'
 interface BarcodeInlineProps {
   barcode: string
   barcodeOk: boolean
-  inputRef: RefObject<HTMLInputElement>
+  inputRef: RefObject<HTMLInputElement | null>
   atualizando: boolean
   botaoLabel: string
   onChange: (v: string) => void

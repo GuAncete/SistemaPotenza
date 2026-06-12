@@ -6,7 +6,7 @@ interface BarcodeCardProps {
   subtitulo: string
   barcode: string
   barcodeOk: boolean
-  inputRef: RefObject<HTMLInputElement>
+  inputRef: RefObject<HTMLInputElement | null>
   atualizando: boolean
   botaoLabel: string
   botaoIcone: ReactNode
