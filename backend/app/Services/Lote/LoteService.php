@@ -50,14 +50,35 @@ class LoteService implements LoteServiceInterface
 
     private function get(string $uri, array $query): Response
     {
+        $url = (string) config('services.bridge.url');
+
+        if (empty($url)) {
+            throw new BusinessException(
+                'A URL da API Bridge não está configurada. Verifique a variável BRIDGE_API_URL no arquivo .env.',
+                503
+            );
+        }
+
         try {
-            return Http::baseUrl((string) config('services.bridge.url'))
+            $response = Http::baseUrl($url)
                 ->withHeader('X-Bridge-Token', (string) config('services.bridge.token'))
                 ->acceptJson()
                 ->timeout(5)
                 ->get($uri, $query);
         } catch (ConnectionException) {
-            throw new BusinessException('Serviço de ficha técnica indisponível.', 503);
+            throw new BusinessException(
+                "Não foi possível conectar à API Bridge ({$url}). Verifique se o serviço está ativo.",
+                503
+            );
         }
+
+        if ($response->status() === 401 || $response->status() === 403) {
+            throw new BusinessException(
+                'Autenticação negada na API Bridge. Verifique o token de acesso (BRIDGE_API_TOKEN).',
+                503
+            );
+        }
+
+        return $response;
     }
 }

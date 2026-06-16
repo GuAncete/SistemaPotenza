@@ -84,6 +84,35 @@ class LoteServiceTest extends TestCase
             $this->fail('Esperava BusinessException.');
         } catch (BusinessException $e) {
             $this->assertSame(503, $e->getStatusCode());
+            $this->assertStringContainsString('bridge.test', $e->getMessage());
+        }
+    }
+
+    public function test_busca_por_ordem_lote_lanca_exception_503_quando_url_nao_configurada(): void
+    {
+        config(['services.bridge.url' => '']);
+
+        try {
+            (new LoteService())->buscarPorOrdemLote('06854', 'ABC');
+            $this->fail('Esperava BusinessException.');
+        } catch (BusinessException $e) {
+            $this->assertSame(503, $e->getStatusCode());
+            $this->assertStringContainsString('BRIDGE_API_URL', $e->getMessage());
+        }
+    }
+
+    public function test_busca_por_ordem_lote_lanca_exception_503_quando_bridge_retorna_401(): void
+    {
+        Http::fake([
+            'bridge.test/api/ficha-tecnica/lote*' => Http::response(['message' => 'Unauthorized'], 401),
+        ]);
+
+        try {
+            (new LoteService())->buscarPorOrdemLote('06854', 'ABC');
+            $this->fail('Esperava BusinessException.');
+        } catch (BusinessException $e) {
+            $this->assertSame(503, $e->getStatusCode());
+            $this->assertStringContainsString('BRIDGE_API_TOKEN', $e->getMessage());
         }
     }
 

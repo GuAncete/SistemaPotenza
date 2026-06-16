@@ -60,7 +60,9 @@
       "Bash(taskkill //PID 13492 //F)",
       "Bash(taskkill //PID 21492 //F)",
       "Bash(grep -n -B2 -A10 \"sessao/ativa\\\\|ativa\\(\" src/services/sessao.ts)",
-      "Bash(grep -n -B2 -A10 \"apontamento/ativo\\\\|ativo\\(\" src/services/apontamento.ts)"
+      "Bash(grep -n -B2 -A10 \"apontamento/ativo\\\\|ativo\\(\" src/services/apontamento.ts)",
+      "Bash(Remove-Item *)",
+      "PowerShell(Remove-Item *)"
     ]
   }
 }

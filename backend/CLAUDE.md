@@ -255,8 +255,9 @@ Usar **Laravel Policies** para autorização, nunca verificar role direto no con
 - Configuração em `config/services.php` (`bridge.url`, `bridge.token`),
   via `BRIDGE_API_URL`/`BRIDGE_API_TOKEN` no `.env`
 - `App\Services\Lote\LoteService` implementa `LoteServiceInterface` como
-  cliente HTTP da Bridge; `MockLoteService` é usado em testes/local quando
-  `BRIDGE_API_URL` não está configurado
+  cliente HTTP da Bridge; se `BRIDGE_API_URL` não estiver configurado ou a
+  Bridge estiver inacessível, uma `BusinessException` (503) é lançada com
+  mensagem descritiva do motivo da falha
 
 ### Conventions de Migration
 ```php
