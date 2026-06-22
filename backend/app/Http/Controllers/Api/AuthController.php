@@ -9,25 +9,25 @@ use App\Http\Requests\Auth\ChangePasswordRequest;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Resources\UserResource;
 use App\Http\Traits\ApiResponseTrait;
-use App\Services\ActivityLogService;
 use App\Services\AuthService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class AuthController extends Controller
 {
     use ApiResponseTrait;
 
     public function __construct(
-        private readonly AuthService        $authService,
-        private readonly ActivityLogService $activityLog,
+        private readonly AuthService $authService,
     ) {}
 
     public function login(LoginRequest $request): JsonResponse
     {
         $result = $this->authService->login($request->validated());
 
-        $this->activityLog->record($result['user'], 'login', 'Entrou no sistema.', $request);
+        Auth::shouldUse('sanctum');
+        Auth::setUser($result['user']);
 
         return $this->successResponse(
             [
@@ -49,8 +49,6 @@ class AuthController extends Controller
             $data['password']
         );
 
-        $this->activityLog->record($request->user(), 'trocar_senha', 'Alterou a própria senha.', $request);
-
         return $this->successResponse(null, 'Senha alterada com sucesso.');
     }
 
@@ -69,8 +67,6 @@ class AuthController extends Controller
             $data['new_password'] ?? null,
         );
 
-        $this->activityLog->record($request->user(), 'atualizar_perfil', 'Atualizou nome ou senha do perfil.', $request);
-
         return $this->successResponse(
             new UserResource($request->user()->fresh()),
             'Perfil atualizado com sucesso.'
@@ -79,9 +75,7 @@ class AuthController extends Controller
 
     public function logout(Request $request): JsonResponse
     {
-        $user = $request->user();
-        $this->activityLog->record($user, 'logout', 'Saiu do sistema.', $request);
-        $this->authService->logout($user);
+        $this->authService->logout($request->user());
 
         return $this->successResponse(null, 'Logout realizado com sucesso.');
     }

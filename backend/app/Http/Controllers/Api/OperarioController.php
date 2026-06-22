@@ -9,7 +9,6 @@ use App\Http\Requests\Admin\CreateOperarioRequest;
 use App\Http\Traits\ApiResponseTrait;
 use App\Models\Operario;
 use App\Models\User;
-use App\Services\ActivityLogService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -17,8 +16,6 @@ use Illuminate\Support\Facades\Hash;
 class OperarioController extends Controller
 {
     use ApiResponseTrait;
-
-    public function __construct(private readonly ActivityLogService $activityLog) {}
 
     public function index(): JsonResponse
     {
@@ -46,8 +43,6 @@ class OperarioController extends Controller
             'matricula'      => $matricula,
             'etapa_fluxo_id' => $data['etapa_fluxo_id'],
         ]);
-
-        $this->activityLog->record($request->user(), 'criar_operario', "Criou o operário {$data['name']} ({$data['email']}).", $request);
 
         return $this->successResponse(
             $operario->load(['user', 'etapaFluxo']),
@@ -98,8 +93,6 @@ class OperarioController extends Controller
             $operario->update(['etapa_fluxo_id' => $data['etapa_fluxo_id']]);
         }
 
-        $this->activityLog->record($request->user(), 'editar_operario', "Editou o operário #{$id}.", $request);
-
         return $this->successResponse(
             $operario->fresh()->load(['user', 'etapaFluxo']),
             'Operário atualizado.'
@@ -114,10 +107,7 @@ class OperarioController extends Controller
             return $this->errorResponse('Operário não encontrado.', 404);
         }
 
-        $nomeSalvo = $operario->user->name;
         $operario->user->delete();
-
-        $this->activityLog->record($request->user(), 'remover_operario', "Removeu o operário {$nomeSalvo}.", $request);
 
         return $this->successResponse(null, 'Operário removido.');
     }
