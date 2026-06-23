@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useState } from 'react'
 import axios from 'axios'
-import { Users, Loader2, Plus, Pencil } from 'lucide-react'
+import { Users, Loader2, Plus, Pencil, Barcode } from 'lucide-react'
 import { getOperarios, type Operario } from '@/api/operarios'
 import { OperarioFormModal } from '@/components/OperarioFormModal'
+import { CrachaOperarioModal } from '@/components/CrachaOperarioModal'
 
 export function OperariosPage() {
   const [operarios, setOperarios]   = useState<Operario[]>([])
@@ -10,6 +11,7 @@ export function OperariosPage() {
   const [error, setError]           = useState<string | null>(null)
   const [modalOpen, setModalOpen]   = useState(false)
   const [editTarget, setEditTarget] = useState<Operario | undefined>(undefined)
+  const [crachaTarget, setCrachaTarget] = useState<Operario | null>(null)
 
   const load = useCallback((signal?: AbortSignal) => {
     setLoading(true)
@@ -50,7 +52,7 @@ export function OperariosPage() {
 
   return (
     <>
-      <div className="space-y-6">
+      <div className="space-y-6 print:hidden">
         {/* cabeçalho */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -121,13 +123,22 @@ export function OperariosPage() {
                     </td>
                     <td className="px-6 py-4 text-slate-400">{o.user.email}</td>
                     <td className="px-4 py-4 text-right">
-                      <button
-                        onClick={() => openEdit(o)}
-                        className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
-                        title="Editar operário"
-                      >
-                        <Pencil className="w-4 h-4" />
-                      </button>
+                      <div className="flex items-center justify-end gap-1">
+                        <button
+                          onClick={() => setCrachaTarget(o)}
+                          className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
+                          title="Imprimir crachá"
+                        >
+                          <Barcode className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => openEdit(o)}
+                          className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
+                          title="Editar operário"
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -142,6 +153,11 @@ export function OperariosPage() {
         onClose={handleClose}
         onSuccess={() => load()}
         initialData={editTarget}
+      />
+
+      <CrachaOperarioModal
+        operario={crachaTarget}
+        onClose={() => setCrachaTarget(null)}
       />
     </>
   )

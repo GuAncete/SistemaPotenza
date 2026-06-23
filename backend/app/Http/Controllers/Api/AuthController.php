@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\ChangePasswordRequest;
+use App\Http\Requests\Auth\LoginCrachaRequest;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Resources\UserResource;
 use App\Http\Traits\ApiResponseTrait;
@@ -25,6 +26,23 @@ class AuthController extends Controller
     public function login(LoginRequest $request): JsonResponse
     {
         $result = $this->authService->login($request->validated());
+
+        Auth::shouldUse('sanctum');
+        Auth::setUser($result['user']);
+
+        return $this->successResponse(
+            [
+                'user'                     => new UserResource($result['user']),
+                'token'                    => $result['token'],
+                'requires_password_change' => $result['requires_password_change'],
+            ],
+            'Login realizado com sucesso.'
+        );
+    }
+
+    public function loginCracha(LoginCrachaRequest $request): JsonResponse
+    {
+        $result = $this->authService->loginPorMatricula($request->validated('matricula'));
 
         Auth::shouldUse('sanctum');
         Auth::setUser($result['user']);

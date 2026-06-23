@@ -33,6 +33,14 @@ export async function login(payload: LoginPayload): Promise<LoginResponse> {
   return response.data.data
 }
 
+export async function loginCracha(matricula: string): Promise<LoginResponse> {
+  const response = await apiClient.post<ApiEnvelope<LoginResponse>>(
+    '/auth/login-cracha',
+    { matricula },
+  )
+  return response.data.data
+}
+
 export async function logout(): Promise<void> {
   await apiClient.post('/auth/logout')
 }

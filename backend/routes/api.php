@@ -19,6 +19,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::prefix('auth')->group(function () {
     Route::post('/login', [AuthController::class, 'login']);
+    Route::post('/login-cracha', [AuthController::class, 'loginCracha']);
 
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('/logout',          [AuthController::class, 'logout']);

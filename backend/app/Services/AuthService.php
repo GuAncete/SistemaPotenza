@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Exceptions\BusinessException;
+use App\Models\Operario;
 use App\Models\User;
 use App\Repositories\Contracts\UserRepositoryInterface;
 use Illuminate\Support\Facades\Hash;
@@ -21,6 +22,33 @@ class AuthService
 
         if (! $user || ! Hash::check($credentials['password'], $user->password)) {
             throw new BusinessException('Credenciais inválidas.', 401);
+        }
+
+        if (! $user->ativo) {
+            throw new BusinessException('Conta desativada. Entre em contato com o administrador.', 403);
+        }
+
+        $token = $user->createToken('api-token')->plainTextToken;
+
+        return [
+            'user'                     => $user,
+            'token'                    => $token,
+            'requires_password_change' => $user->must_change_password,
+        ];
+    }
+
+    public function loginPorMatricula(string $matricula): array
+    {
+        $operario = Operario::with('user')->where('matricula', $matricula)->first();
+
+        if (! $operario || ! $operario->user) {
+            throw new BusinessException('Crachá não reconhecido.', 401);
+        }
+
+        $user = $operario->user;
+
+        if ($user->role !== 'operario') {
+            throw new BusinessException('Crachá não reconhecido.', 401);
         }
 
         if (! $user->ativo) {

@@ -1,5 +1,6 @@
 import { type RefObject, type ReactNode } from 'react'
 import { QrCode, ScanLine, Loader2 } from 'lucide-react'
+import { ClearableInput } from '@/components/ui/ClearableInput'
 
 interface BarcodeCardProps {
   titulo: string
@@ -37,11 +38,11 @@ export function BarcodeCard({
         )}
       </div>
       <div className="px-6 py-5 space-y-4">
-        <input
+        <ClearableInput
           ref={inputRef}
           type="text"
           value={barcode}
-          onChange={e => onChange(e.target.value)}
+          onChange={onChange}
           onKeyDown={e => e.key === 'Enter' && barcodeOk && onSubmit()}
           autoComplete="off"
           placeholder="Bipé o código de barras"

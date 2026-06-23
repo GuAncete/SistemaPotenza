@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useState, type ReactNode } from 'react'
-import { login as apiLogin, logout as apiLogout, type User, type LoginPayload, type LoginResponse } from '@/api/auth'
+import { login as apiLogin, loginCracha as apiLoginCracha, logout as apiLogout, type User, type LoginPayload, type LoginResponse } from '@/api/auth'
 
 const TOKEN_KEY = 'potenza_token'
 const USER_KEY  = 'potenza_user'
@@ -24,6 +24,7 @@ interface AuthContextValue {
   isLoading: boolean
   error: string | null
   signIn: (payload: LoginPayload) => Promise<LoginResponse>
+  signInCracha: (matricula: string) => Promise<LoginResponse>
   signOut: () => Promise<void>
   clearPasswordChangeFlag: () => void
 }
@@ -59,6 +60,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
+  const signInCracha = useCallback(async (matricula: string): Promise<LoginResponse> => {
+    setIsLoading(true)
+    setError(null)
+    try {
+      const result = await apiLoginCracha(matricula)
+      localStorage.setItem(TOKEN_KEY, result.token)
+      localStorage.setItem(USER_KEY, JSON.stringify(result.user))
+      setToken(result.token)
+      setUser(result.user)
+      return result
+    } catch (err: unknown) {
+      const message =
+        (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
+        'Crachá não reconhecido.'
+      setError(message)
+      throw err
+    } finally {
+      setIsLoading(false)
+    }
+  }, [])
+
   const signOut = useCallback(async () => {
     try {
       await apiLogout()
@@ -82,7 +104,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   return (
     <AuthContext.Provider value={{
       user, token, isAuthenticated, isLoading, error,
-      signIn, signOut, clearPasswordChangeFlag,
+      signIn, signInCracha, signOut, clearPasswordChangeFlag,
     }}>
       {children}
     </AuthContext.Provider>

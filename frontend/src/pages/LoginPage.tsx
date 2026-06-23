@@ -1,13 +1,14 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useForm } from 'react-hook-form'
+import { useForm, Controller } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Eye, EyeOff, Loader2, AlertCircle } from 'lucide-react'
+import { Eye, EyeOff, Loader2, AlertCircle, ScanLine } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { ClearableInput } from '@/components/ui/ClearableInput'
 import { useAuth } from '@/hooks/useAuth'
+import type { LoginResponse } from '@/api/auth'
 
 const loginSchema = z.object({
   email: z.string().min(1, 'E-mail obrigatório').email('E-mail inválido'),
@@ -18,27 +19,47 @@ type LoginFormData = z.infer<typeof loginSchema>
 
 export function LoginPage() {
   const navigate = useNavigate()
-  const { signIn, isLoading, error } = useAuth()
+  const { signIn, signInCracha, isLoading, error } = useAuth()
   const [showPassword, setShowPassword] = useState(false)
+  const [matricula, setMatricula] = useState('')
+  const crachaRef = useRef<HTMLInputElement>(null)
 
   const {
-    register,
+    control,
     handleSubmit,
     formState: { errors },
-  } = useForm<LoginFormData>({ resolver: zodResolver(loginSchema) })
+  } = useForm<LoginFormData>({ resolver: zodResolver(loginSchema), defaultValues: { email: '', password: '' } })
+
+  useEffect(() => {
+    crachaRef.current?.focus()
+  }, [])
+
+  function redirectAfterLogin(result: LoginResponse) {
+    if (result.requires_password_change) {
+      navigate('/change-password')
+    } else if (result.user.role === 'admin' || result.user.role === 'gestor') {
+      navigate('/admin/maquinas')
+    } else {
+      navigate('/operario')
+    }
+  }
 
   async function onSubmit(data: LoginFormData) {
     try {
-      const result = await signIn(data)
-      if (result.requires_password_change) {
-        navigate('/change-password')
-      } else if (result.user.role === 'admin' || result.user.role === 'gestor') {
-        navigate('/admin/maquinas')
-      } else {
-        navigate('/operario')
-      }
+      redirectAfterLogin(await signIn(data))
     } catch {
       // erro tratado pelo hook
+    }
+  }
+
+  async function handleCrachaSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    if (!matricula.trim()) return
+    try {
+      redirectAfterLogin(await signInCracha(matricula.trim()))
+    } catch {
+      setMatricula('')
+      crachaRef.current?.focus()
     }
   }
 
@@ -72,7 +93,32 @@ export function LoginPage() {
           {/* Divisor */}
           <div className="border-t border-white/10" />
 
-          {/* Formulário */}
+          {/* Login por crachá */}
+          <form onSubmit={handleCrachaSubmit} className="space-y-1.5">
+            <Label htmlFor="matricula" className="text-white/70 text-sm">
+              Bipe seu crachá
+            </Label>
+            <ClearableInput
+              ref={crachaRef}
+              id="matricula"
+              type="text"
+              value={matricula}
+              onChange={setMatricula}
+              autoComplete="off"
+              placeholder="Bipe o código de barras do crachá"
+              className="w-full h-9 px-3 py-1 bg-white/10 border border-white/20 rounded-md text-sm text-white placeholder:text-white/30 focus:outline-none focus-visible:ring-1 focus-visible:ring-[#00aa84] focus-visible:border-[#00aa84] transition-colors font-mono tracking-widest"
+              trailingExtra={<ScanLine className="w-4 h-4 text-white/40" />}
+            />
+          </form>
+
+          {/* Divisor "ou" */}
+          <div className="flex items-center gap-3">
+            <div className="flex-1 border-t border-white/10" />
+            <span className="text-white/30 text-xs uppercase tracking-wider">ou</span>
+            <div className="flex-1 border-t border-white/10" />
+          </div>
+
+          {/* Formulário e-mail/senha */}
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-5" noValidate>
 
             {/* E-mail */}
@@ -80,14 +126,20 @@ export function LoginPage() {
               <Label htmlFor="email" className="text-white/70 text-sm">
                 E-mail
               </Label>
-              <Input
-                id="email"
-                type="email"
-                autoComplete="email"
-                placeholder="seu@email.com"
-                className="bg-white/10 border-white/20 text-white placeholder:text-white/30
-                           focus-visible:ring-[#00aa84] focus-visible:border-[#00aa84]"
-                {...register('email')}
+              <Controller
+                name="email"
+                control={control}
+                render={({ field }) => (
+                  <ClearableInput
+                    id="email"
+                    type="email"
+                    autoComplete="email"
+                    placeholder="seu@email.com"
+                    value={field.value}
+                    onChange={field.onChange}
+                    className="w-full h-9 px-3 py-1 bg-white/10 border border-white/20 rounded-md text-sm text-white placeholder:text-white/30 focus:outline-none focus-visible:ring-1 focus-visible:ring-[#00aa84] focus-visible:border-[#00aa84] transition-colors"
+                  />
+                )}
               />
               {errors.email && (
                 <p className="text-red-400 text-xs flex items-center gap-1">
@@ -102,26 +154,31 @@ export function LoginPage() {
               <Label htmlFor="password" className="text-white/70 text-sm">
                 Senha
               </Label>
-              <div className="relative">
-                <Input
-                  id="password"
-                  type={showPassword ? 'text' : 'password'}
-                  autoComplete="current-password"
-                  placeholder="••••••••"
-                  className="bg-white/10 border-white/20 text-white placeholder:text-white/30
-                             focus-visible:ring-[#00aa84] focus-visible:border-[#00aa84] pr-10
-                             [&::-ms-reveal]:hidden [&::-ms-clear]:hidden"
-                  {...register('password')}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword((v) => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/80 transition-colors"
-                  aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
-                >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              </div>
+              <Controller
+                name="password"
+                control={control}
+                render={({ field }) => (
+                  <ClearableInput
+                    id="password"
+                    type={showPassword ? 'text' : 'password'}
+                    autoComplete="current-password"
+                    placeholder="••••••••"
+                    value={field.value}
+                    onChange={field.onChange}
+                    className="w-full h-9 px-3 py-1 bg-white/10 border border-white/20 rounded-md text-sm text-white placeholder:text-white/30 focus:outline-none focus-visible:ring-1 focus-visible:ring-[#00aa84] focus-visible:border-[#00aa84] transition-colors [&::-ms-reveal]:hidden [&::-ms-clear]:hidden"
+                    trailingExtra={
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword((v) => !v)}
+                        className="text-white/40 hover:text-white/80 transition-colors"
+                        aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+                      >
+                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    }
+                  />
+                )}
+              />
               {errors.password && (
                 <p className="text-red-400 text-xs flex items-center gap-1">
                   <AlertCircle className="w-3 h-3" />

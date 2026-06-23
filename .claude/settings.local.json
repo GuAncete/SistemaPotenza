@@ -12,7 +12,10 @@
       "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:8000/api/turnos --max-time 3)",
       "Bash(curl *)",
       "Bash(netstat -ano)",
-      "Bash(git fetch *)"
+      "Bash(git fetch *)",
+      "Bash(npx vite *)",
+      "mcp__plugin_ecc_playwright__browser_navigate",
+      "Bash(pkill -f \"vite\")"
     ]
   }
 }
