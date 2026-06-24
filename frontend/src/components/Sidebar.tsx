@@ -69,7 +69,7 @@ export function Sidebar({ onClose }: SidebarProps) {
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto scrollbar-hide">
         {loading && (
           <div className="flex items-center justify-center gap-2 py-8 text-slate-500">
             <Loader2 className="w-4 h-4 animate-spin" />
