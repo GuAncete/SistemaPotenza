@@ -32,16 +32,16 @@ export function FaseTimer({
           <p className="text-xs text-slate-500 mt-0.5">{subtitulo}</p>
         </div>
       </div>
-      <div className="px-6 py-5 space-y-4">
-        <div className="flex flex-col items-center py-4">
+      <div className="px-6 py-4 space-y-3">
+        <div className="flex flex-col items-center py-2">
           <p className="text-xs text-slate-500 mb-1">Tempo decorrido</p>
-          <p className={`text-4xl font-mono font-bold tabular-nums ${corTimer}`}>{timer}</p>
+          <p className={`text-3xl font-mono font-bold tabular-nums ${corTimer}`}>{timer}</p>
         </div>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-2">
           {produto && (
-            <div className="col-span-2 bg-white/[0.03] rounded-lg px-3 py-2.5">
+            <div className="col-span-2 bg-white/[0.03] rounded-lg px-3 py-2">
               <p className="text-xs text-slate-500">Produto</p>
-              <p className="text-sm font-semibold text-white mt-0.5">{produto}</p>
+              <p className="text-sm font-semibold text-white mt-0.5 truncate">{produto}</p>
             </div>
           )}
           <InfoCard label="Cód. da peça" value={codPeca} />

@@ -15,7 +15,7 @@ export function FichasDoLote({ fichas }: FichasDoLoteProps) {
           Fichas deste lote ({fichas.length})
         </p>
       </div>
-      <div className="divide-y divide-white/5">
+      <div className="max-h-52 overflow-y-auto divide-y divide-white/5">
         {fichas.map(f => {
           const totalPilhas = f.total_pilhas
           return (

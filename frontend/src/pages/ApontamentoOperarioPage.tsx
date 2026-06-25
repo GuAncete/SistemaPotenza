@@ -484,44 +484,33 @@ export function ApontamentoOperarioPage() {
       {/* FASE: em_producao */}
       {fase === 'em_producao' && apontamento && (
         <>
+          {/* Card de info compacto: timer + dados do lote em uma linha */}
           <div className="bg-[#0f1923] border border-white/5 rounded-xl overflow-hidden">
-            <div className="flex items-center gap-3 px-6 pt-5 pb-4 border-b border-white/5">
-              <div className="p-2 rounded-lg bg-[#00aa84]/10">
-                <Timer className="w-5 h-5 text-[#00aa84]" />
+            <div className="flex items-center justify-between gap-3 px-5 py-3 border-b border-white/5">
+              <div className="flex items-center gap-2 min-w-0">
+                <div className="p-1.5 rounded-lg bg-[#00aa84]/10 shrink-0">
+                  <Timer className="w-4 h-4 text-[#00aa84]" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold text-white truncate">
+                    {apontamento.desc_peca ?? apontamento.cod_peca}
+                  </p>
+                  <p className="text-xs text-slate-500">
+                    lote {apontamento.ordem_lote.replace(/^0+/, '')}
+                    {apontamento.qtde_total !== null && (
+                      <span className="ml-2 text-[#00aa84] font-medium">{totalBipado}/{apontamento.qtde_total} pç</span>
+                    )}
+                  </p>
+                </div>
               </div>
-              <div>
-                <p className="text-sm font-semibold text-white">Produção em andamento</p>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  {apontamento.cod_peca} · lote {apontamento.ordem_lote.replace(/^0+/, '')}
-                </p>
-              </div>
-            </div>
-            <div className="px-6 py-5 space-y-4">
-              <div className="flex flex-col items-center py-2">
-                <p className="text-xs text-slate-500 mb-1">Tempo de produção</p>
-                <p className="text-4xl font-mono font-bold tabular-nums text-[#00aa84]">{timerProducao}</p>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                {apontamento.desc_peca && (
-                  <div className="col-span-2 bg-white/[0.03] rounded-lg px-3 py-2.5">
-                    <p className="text-xs text-slate-500">Produto</p>
-                    <p className="text-sm font-semibold text-white mt-0.5">{apontamento.desc_peca}</p>
-                  </div>
-                )}
-                {apontamento.qtde_total !== null && (
-                  <div className="col-span-2 bg-white/[0.03] rounded-lg px-3 py-2.5 flex items-center justify-between">
-                    <p className="text-xs text-slate-500">Total do pedido</p>
-                    <p className="text-sm font-semibold text-[#00aa84]">{apontamento.qtde_total} pç</p>
-                  </div>
-                )}
+              <div className="shrink-0 text-right">
+                <p className="text-xs text-slate-500 leading-none mb-0.5">produção</p>
+                <p className="text-2xl font-mono font-bold tabular-nums text-[#00aa84]">{timerProducao}</p>
               </div>
             </div>
           </div>
 
-          {apontamento.fichas.length > 0 && (
-            <FichasDoLote fichas={apontamento.fichas} qtdeTotal={apontamento.qtde_total} />
-          )}
-
+          {/* Scan — sempre visível */}
           <div className="bg-[#0f1923] border border-white/5 rounded-xl overflow-hidden">
             <div className="flex items-center gap-2 px-5 py-3 border-b border-white/5">
               <QrCode className="w-4 h-4 text-slate-400" />
@@ -540,6 +529,7 @@ export function ApontamentoOperarioPage() {
             </div>
           </div>
 
+          {/* Botões de ação — sempre visíveis, antes das fichas */}
           <div className="space-y-3">
             <button
               type="button"
@@ -561,6 +551,11 @@ export function ApontamentoOperarioPage() {
               onClick={() => setShowModalPausa(true)}
             />
           </div>
+
+          {/* Fichas após os botões — scrollável internamente */}
+          {apontamento.fichas.length > 0 && (
+            <FichasDoLote fichas={apontamento.fichas} qtdeTotal={apontamento.qtde_total} />
+          )}
 
           <FichasRecentes fichas={fichasRecentes} />
         </>
