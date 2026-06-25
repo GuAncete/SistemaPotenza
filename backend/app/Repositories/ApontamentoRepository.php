@@ -138,4 +138,15 @@ class ApontamentoRepository implements ApontamentoRepositoryInterface
 
         return $apontamento->load(self::EAGER);
     }
+
+    public function buscarUltimoFinalizadoPorLoteEtapa(string $ordemLote, string $codPeca, int $etapaFluxoId): ?Apontamento
+    {
+        return Apontamento::where('ordem_lote', $ordemLote)
+            ->where('cod_peca', $codPeca)
+            ->where('etapa_fluxo_id', $etapaFluxoId)
+            ->where('status', Apontamento::STATUS_FINALIZADO)
+            ->with(self::EAGER)
+            ->latest()
+            ->first();
+    }
 }

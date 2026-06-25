@@ -33,6 +33,8 @@ export interface Apontamento {
   desc_peca: string | null
   cod_produto: string | null
   qtde_total: number | null
+  numero_passagem: number
+  apontamento_origem_id: number | null
   status:
     | 'em_setup'
     | 'aguardando_producao'
@@ -93,6 +95,12 @@ export async function getFichasRecentes(): Promise<FichaApontamento[]> {
 /** Passo 1: bipar lote → cria apontamento + inicia setup automaticamente */
 export async function biparLote(payload: BiparLotePayload): Promise<Apontamento> {
   const res = await apiClient.post<ApiEnvelope<Apontamento>>('/apontamento/bipar', payload)
+  return res.data.data
+}
+
+/** Passo 1b: inicia nova passagem do mesmo lote (sem re-scanear, usa cod_peca + ordem_lote do apontamento anterior) */
+export async function segundaPassagem(payload: BiparLotePayload): Promise<Apontamento> {
+  const res = await apiClient.post<ApiEnvelope<Apontamento>>('/apontamento/segunda-passagem', payload)
   return res.data.data
 }
 

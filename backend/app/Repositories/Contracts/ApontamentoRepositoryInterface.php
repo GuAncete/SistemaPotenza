@@ -34,4 +34,7 @@ interface ApontamentoRepositoryInterface
 
     /** Reatribui o apontamento a uma nova sessão de trabalho. */
     public function atualizarSessao(Apontamento $apontamento, int $sessaoId): Apontamento;
+
+    /** Busca o apontamento finalizado mais recente para o lote/etapa. */
+    public function buscarUltimoFinalizadoPorLoteEtapa(string $ordemLote, string $codPeca, int $etapaFluxoId): ?Apontamento;
 }

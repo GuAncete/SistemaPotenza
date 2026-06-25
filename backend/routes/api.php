@@ -53,10 +53,11 @@ Route::middleware(['auth:sanctum', 'check_password_change', 'role:operario'])->g
         Route::get('/{id}',            [ApontamentoController::class, 'show']);
 
         // Fluxo de trabalho
-        Route::post('/bipar',                [ApontamentoController::class, 'bipar']);          // 1. bipar lote → cria apontamento + inicia setup
-        Route::post('/{id}/finalizar-setup', [ApontamentoController::class, 'finalizarSetup']); // 2. encerra setup → aguardando_producao
-        Route::post('/{id}/bipar-ficha',     [ApontamentoController::class, 'biparFicha']);     // 3. bipar ficha → em_producao (repete N vezes)
-        Route::post('/{id}/finalizar',       [ApontamentoController::class, 'finalizar']);      // 4. encerra produção + registra qtd por ficha
+        Route::post('/bipar',               [ApontamentoController::class, 'bipar']);                  // 1. bipar lote → cria apontamento + inicia setup
+        Route::post('/segunda-passagem',    [ApontamentoController::class, 'iniciarSegundaPassagem']); // 1b. nova passagem do mesmo lote
+        Route::post('/{id}/finalizar-setup', [ApontamentoController::class, 'finalizarSetup']);        // 2. encerra setup → aguardando_producao
+        Route::post('/{id}/bipar-ficha',     [ApontamentoController::class, 'biparFicha']);            // 3. bipar ficha → em_producao (repete N vezes)
+        Route::post('/{id}/finalizar',       [ApontamentoController::class, 'finalizar']);             // 4. encerra produção + registra qtd por ficha
         // Pausa / retomada
         Route::post('/{id}/pausar',         [ApontamentoController::class, 'pausar']);         // pausa manual com motivo
         Route::post('/{id}/pausar-sistema', [ApontamentoController::class, 'pausarSistema']); // auto-pausa (beacon)

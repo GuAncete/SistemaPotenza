@@ -9,6 +9,7 @@ import { getSessaoAtiva, getTurnoHoje, encerrarSessao, encerrarTurno, pausarSess
 import {
   getApontamentoAtivo,
   biparLote,
+  segundaPassagem,
   finalizarSetup,
   biparFicha,
   finalizarApontamento,
@@ -289,6 +290,23 @@ export function ApontamentoOperarioPage() {
     setSaiuSemPausar(false)
     await recarregarFichasRecentes()
     setFase('aguardando')
+  }
+
+  async function handleSegundaPassagem() {
+    if (!apontamento) return
+    setAtualizando(true); setErroApi(null)
+    try {
+      const ap = await segundaPassagem({ cod_peca: apontamento.cod_peca, ordem_lote: apontamento.ordem_lote })
+      setApontamento(ap)
+      setBarcode('')
+      setQtdsFichas({})
+      setSaiuSemPausar(false)
+      setFase('em_setup')
+    } catch (err) {
+      setErroApi(apiMsg(err))
+    } finally {
+      setAtualizando(false)
+    }
   }
 
   if (loadingInicial) {
@@ -683,6 +701,16 @@ export function ApontamentoOperarioPage() {
                 </div>
               </div>
             )}
+            <button
+              type="button"
+              onClick={handleSegundaPassagem}
+              disabled={atualizando}
+              className="w-full py-2.5 text-sm font-semibold text-white bg-amber-600 hover:bg-amber-500 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-colors flex items-center justify-center gap-2"
+            >
+              {atualizando
+                ? <><Loader2 className="w-4 h-4 animate-spin" />Iniciando…</>
+                : <><RotateCcw className="w-4 h-4" />Passar novamente nesta máquina</>}
+            </button>
             <button
               type="button"
               onClick={novoLote}

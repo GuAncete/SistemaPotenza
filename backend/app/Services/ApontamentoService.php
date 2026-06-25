@@ -81,6 +81,53 @@ class ApontamentoService
     }
 
     /**
+     * Inicia uma segunda (ou N-ésima) passagem do mesmo lote na mesma etapa.
+     * Requer que exista um apontamento finalizado para o lote/etapa.
+     * Cria um novo Apontamento vinculado ao original, com numero_passagem incrementado.
+     */
+    public function iniciarSegundaPassagem(Operario $operario, array $dados): Apontamento
+    {
+        $sessao = $this->sessaoRepo->buscarSessaoAtiva($operario);
+
+        if (! $sessao) {
+            throw new BusinessException('Operário não possui sessão ativa. Selecione uma máquina primeiro.', 422);
+        }
+
+        if ($this->apontamentoRepo->buscarApontamentoAtivo($sessao)) {
+            throw new BusinessException('Já existe um apontamento em andamento. Finalize-o antes de iniciar nova passagem.', 422);
+        }
+
+        $etapaFluxoId = $sessao->maquina->etapa_fluxo_id;
+
+        $origem = $this->apontamentoRepo->buscarUltimoFinalizadoPorLoteEtapa(
+            $dados['ordem_lote'],
+            $dados['cod_peca'],
+            $etapaFluxoId,
+        );
+
+        if (! $origem) {
+            throw new BusinessException('Nenhuma passagem anterior finalizada encontrada para este lote nesta etapa.', 422);
+        }
+
+        $apontamento = $this->apontamentoRepo->criar([
+            'sessao_trabalho_id'   => $sessao->id,
+            'etapa_fluxo_id'       => $etapaFluxoId,
+            'cod_peca'             => $origem->cod_peca,
+            'ordem_lote'           => $origem->ordem_lote,
+            'desc_peca'            => $origem->desc_peca,
+            'cod_produto'          => $origem->cod_produto,
+            'qtde_total'           => $origem->qtde_total,
+            'ftec_peca_pilha'      => $origem->ftec_peca_pilha,
+            'status'               => Apontamento::STATUS_EM_SETUP,
+            'setup_inicio'         => Carbon::now(),
+            'numero_passagem'      => $origem->numero_passagem + 1,
+            'apontamento_origem_id' => $origem->id,
+        ]);
+
+        return $apontamento->load(['etapaFluxo', 'fichas', 'pausas.motivoPausa']);
+    }
+
+    /**
      * Finaliza o setup e aguarda a bipagem da primeira ficha de produção.
      * Status: em_setup → aguardando_producao
      */
@@ -138,22 +185,11 @@ class ApontamentoService
 
         $pilha = (int) $dados['pilha'];
 
-        $vezesBipadas     = $this->fichaRepo->contarVezesPilhaBipada(
-            $apontamento->ordem_lote,
-            $apontamento->cod_peca,
-            $apontamento->etapa_fluxo_id,
-            $pilha,
-        );
-        $fichasPermitidas = $this->loteService->contarFichasLote(
-            $apontamento->ordem_lote,
-            $apontamento->cod_peca,
-        );
-
-        if ($vezesBipadas >= $fichasPermitidas) {
-            $msg = $fichasPermitidas > 1
-                ? "Pilha {$pilha} já foi bipada {$fichasPermitidas}x (todas as fichas deste lote foram processadas)."
-                : "Pilha {$pilha} já foi bipada neste lote.";
-            throw new BusinessException($msg, 422);
+        // Verifica duplicata apenas dentro do apontamento atual (o constraint DB
+        // unique_pilha_por_apontamento já garante integridade; esta verificação
+        // antecipa o erro com mensagem amigável).
+        if ($apontamento->fichas()->where('pilha', $pilha)->exists()) {
+            throw new BusinessException("Pilha {$pilha} já foi bipada neste apontamento.", 422);
         }
 
         // Marco de tempo compartilhado: fim da ficha anterior = inicio desta

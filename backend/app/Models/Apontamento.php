@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Apontamento extends Model
 {
@@ -30,6 +31,8 @@ class Apontamento extends Model
         'producao_fim',
         'producao_duracao_segundos',
         'total_pausa_segundos',
+        'numero_passagem',
+        'apontamento_origem_id',
     ];
 
     protected $casts = [
@@ -42,6 +45,7 @@ class Apontamento extends Model
         'producao_fim'              => 'datetime',
         'producao_duracao_segundos' => 'integer',
         'total_pausa_segundos'      => 'integer',
+        'numero_passagem'           => 'integer',
     ];
 
     public const STATUS_EM_SETUP            = 'em_setup';
@@ -69,6 +73,11 @@ class Apontamento extends Model
     public function pausas(): HasMany
     {
         return $this->hasMany(Pausa::class)->orderBy('inicio');
+    }
+
+    public function origem(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'apontamento_origem_id');
     }
 
     public function isAtivo(): bool

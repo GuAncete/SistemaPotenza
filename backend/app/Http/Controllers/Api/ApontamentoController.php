@@ -207,6 +207,29 @@ class ApontamentoController extends Controller
         );
     }
 
+    /**
+     * Inicia nova passagem do mesmo lote na mesma máquina.
+     * Requer que exista apontamento finalizado para o lote/etapa.
+     */
+    public function iniciarSegundaPassagem(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'cod_peca'   => ['required', 'string'],
+            'ordem_lote' => ['required', 'string'],
+        ]);
+
+        $apontamento = $this->apontamentoService->iniciarSegundaPassagem(
+            $request->user()->operario,
+            $data
+        );
+
+        return $this->successResponse(
+            new ApontamentoResource($apontamento),
+            'Nova passagem iniciada. Setup começou.',
+            201
+        );
+    }
+
     /** Pausa manual: operário informa um motivo predefinido. */
     public function pausar(Request $request, int $id): JsonResponse
     {
