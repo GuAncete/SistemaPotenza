@@ -102,9 +102,14 @@ class ApontamentoController extends Controller
             'ordem_lote' => ['required', 'string'],
             'qtd_peca'   => ['required', 'integer', 'min:1'],
             'pilha'      => ['required', 'integer', 'min:1'],
+            'confirmar'  => ['sometimes', 'boolean'],
         ]);
 
-        $result = $this->apontamentoService->biparFicha($apontamento, $data);
+        $result = $this->apontamentoService->biparFicha(
+            $apontamento,
+            $data,
+            (bool) ($data['confirmar'] ?? false),
+        );
 
         return $this->successResponse(new ApontamentoResource($result), 'Ficha bipada com sucesso.');
     }

@@ -58,6 +58,8 @@ export function ApontamentoOperarioPage() {
   const [barcode, setBarcode]               = useState('')
   const barcodeRef                          = useRef<HTMLInputElement>(null)
   const [qtdsFichas, setQtdsFichas]         = useState<Record<number, string>>({})
+  const [showConfirmarNovaPassagem, setShowConfirmarNovaPassagem] = useState(false)
+  const [dadosNovaPassagem, setDadosNovaPassagem]                 = useState<{ cod_peca: string; ordem_lote: string } | null>(null)
 
   const parsedBarcode = barcode.length === BARCODE_LENGTH ? parseBarcode(barcode) : null
   const barcodeOk     = parsedBarcode !== null
@@ -183,9 +185,34 @@ export function ApontamentoOperarioPage() {
       setBarcode('')
       setFase('em_setup')
     } catch (err) {
+      const data = (err as { response?: { data?: { loteCompleto?: boolean } } })?.response?.data
+      if (data?.loteCompleto) {
+        setDadosNovaPassagem({ cod_peca: parsedBarcode.cod_peca, ordem_lote: parsedBarcode.ordem_lote })
+        setShowConfirmarNovaPassagem(true)
+      } else {
+        setErroApi(apiMsg(err))
+      }
+    } finally {
+      setAtualizando(false)
+    }
+  }
+
+  async function handleConfirmarNovaPassagem() {
+    if (!dadosNovaPassagem) return
+    setShowConfirmarNovaPassagem(false)
+    setAtualizando(true); setErroApi(null)
+    try {
+      const ap = await segundaPassagem(dadosNovaPassagem)
+      setApontamento(ap)
+      setBarcode('')
+      setQtdsFichas({})
+      setSaiuSemPausar(false)
+      setFase('em_setup')
+    } catch (err) {
       setErroApi(apiMsg(err))
     } finally {
       setAtualizando(false)
+      setDadosNovaPassagem(null)
     }
   }
 
@@ -203,31 +230,55 @@ export function ApontamentoOperarioPage() {
     }
   }
 
+  async function executarBiparFicha(confirmar: boolean) {
+    if (!apontamento || !parsedBarcode) return
+    const ap = await biparFicha(apontamento.id, {
+      cod_peca:   parsedBarcode.cod_peca,
+      ordem_lote: parsedBarcode.ordem_lote,
+      qtd_peca:   parsedBarcode.qtd_peca,
+      pilha:      parsedBarcode.pilha,
+      ...(confirmar && { confirmar: true }),
+    })
+    setApontamento(ap)
+    setQtdsFichas(prev => ({
+      ...prev,
+      ...Object.fromEntries(
+        ap.fichas
+          .filter(f => !(f.id in prev))
+          .map(f => [f.id, String(f.qtd_peca)])
+      ),
+    }))
+    setBarcode('')
+    setFase('em_producao')
+    recarregarFichasRecentes()
+  }
+
   async function handleBiparFicha() {
     if (!apontamento || !parsedBarcode) return
     setAtualizando(true); setErroApi(null)
     try {
-      const ap = await biparFicha(apontamento.id, {
-        cod_peca:   parsedBarcode.cod_peca,
-        ordem_lote: parsedBarcode.ordem_lote,
-        qtd_peca:   parsedBarcode.qtd_peca,
-        pilha:      parsedBarcode.pilha,
-      })
-      setApontamento(ap)
-      setQtdsFichas(prev => ({
-        ...prev,
-        ...Object.fromEntries(
-          ap.fichas
-            .filter(f => !(f.id in prev))
-            .map(f => [f.id, String(f.qtd_peca)])
-        ),
-      }))
-      setBarcode('')
-      setFase('em_producao')
-      recarregarFichasRecentes()
+      await executarBiparFicha(false)
     } catch (err) {
-      setErroApi(apiMsg(err))
-      setBarcode('')
+      type Resp409 = { requiresConfirmation?: boolean; message?: string; passagensRealizadas?: number; passagensEsperadas?: number }
+      const resp = (err as { response?: { status?: number; data?: Resp409 } })?.response
+      if (resp?.status === 409 && resp?.data?.requiresConfirmation) {
+        const realizadas = resp.data.passagensRealizadas ?? 1
+        const esperadas  = resp.data.passagensEsperadas  ?? 2
+        const msg = `${resp.data.message ?? 'Esta pilha já foi bipada neste lote.'}\n\n(${realizadas} de ${esperadas} passagens registradas)`
+        if (confirm(msg)) {
+          try {
+            await executarBiparFicha(true)
+          } catch (err2) {
+            setErroApi(apiMsg(err2))
+            setBarcode('')
+          }
+        } else {
+          setBarcode('')
+        }
+      } else {
+        setErroApi(apiMsg(err))
+        setBarcode('')
+      }
     } finally {
       setAtualizando(false)
     }
@@ -760,6 +811,39 @@ export function ApontamentoOperarioPage() {
           onSelect={handlePausar}
           onClose={() => setShowModalPausa(false)}
         />
+      )}
+
+      {/* Modal de confirmação de nova passagem */}
+      {showConfirmarNovaPassagem && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="w-full max-w-sm bg-[#0f1923] border border-white/10 rounded-2xl overflow-hidden shadow-2xl">
+            <div className="flex items-center gap-2 px-5 py-4 border-b border-white/5">
+              <RotateCcw className="w-4 h-4 text-blue-400" />
+              <p className="text-sm font-semibold text-white">Nova passagem</p>
+            </div>
+            <div className="p-5 space-y-4">
+              <p className="text-sm text-slate-400 leading-relaxed">
+                Todas as pilhas deste lote já foram processadas. Deseja iniciar uma nova passagem?
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => { setShowConfirmarNovaPassagem(false); setDadosNovaPassagem(null); setBarcode('') }}
+                  className="flex-1 px-4 py-3 rounded-xl bg-white/[0.03] hover:bg-white/[0.07] border border-white/5 text-sm font-medium text-slate-300 transition-all"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleConfirmarNovaPassagem}
+                  disabled={atualizando}
+                  className="flex-1 px-4 py-3 rounded-xl bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/20 text-sm font-medium text-blue-300 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {atualizando ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RotateCcw className="w-3.5 h-3.5" />}
+                  Iniciar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )

@@ -29,7 +29,8 @@
       "Bash(php -m)",
       "Bash(git rm *)",
       "Bash(php *)",
-      "Bash(xargs ls)"
+      "Bash(xargs ls)",
+      "Bash(xargs grep -l \"segunda-passagem\\\\|segundo\")"
     ]
   }
 }

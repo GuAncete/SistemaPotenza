@@ -64,6 +64,7 @@ export interface BiparFichaPayload {
   ordem_lote: string
   qtd_peca: number
   pilha: number
+  confirmar?: boolean
 }
 
 export interface FinalizarPayload {

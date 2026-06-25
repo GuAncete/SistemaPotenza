@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Exceptions\BusinessException;
+use App\Exceptions\ConfirmacaoNecessariaException;
+use App\Exceptions\LoteCompletoException;
 use App\Models\Apontamento;
 use App\Models\EventoSessao;
 use App\Models\MotivoPausa;
@@ -57,9 +59,10 @@ class ApontamentoService
             );
 
             if ($pilhasBipadas >= $totalPilhas) {
-                throw new BusinessException(
+                throw new LoteCompletoException(
                     "Todas as {$totalPilhas} pilhas deste lote já foram processadas nesta etapa.",
-                    422
+                    $pilhasBipadas,
+                    $totalPilhas,
                 );
             }
         }
@@ -160,7 +163,7 @@ class ApontamentoService
      * Se for a primeira ficha, inicia producao_inicio.
      * Fecha o timer da ficha anterior antes de criar a nova.
      */
-    public function biparFicha(Apontamento $apontamento, array $dados): Apontamento
+    public function biparFicha(Apontamento $apontamento, array $dados, bool $confirmar = false): Apontamento
     {
         if (! in_array($apontamento->status, [
             Apontamento::STATUS_AGUARDANDO_PRODUCAO,
@@ -185,11 +188,36 @@ class ApontamentoService
 
         $pilha = (int) $dados['pilha'];
 
-        // Verifica duplicata apenas dentro do apontamento atual (o constraint DB
-        // unique_pilha_por_apontamento já garante integridade; esta verificação
-        // antecipa o erro com mensagem amigável).
-        if ($apontamento->fichas()->where('pilha', $pilha)->exists()) {
-            throw new BusinessException("Pilha {$pilha} já foi bipada neste apontamento.", 422);
+        // Verifica quantas vezes esta pilha já foi bipada no lote+etapa (cross-apontamento).
+        $vezesBipada = $this->fichaRepo->contarVezesPilhaBipada(
+            $apontamento->ordem_lote,
+            $apontamento->cod_peca,
+            $apontamento->etapa_fluxo_id,
+            $pilha,
+        );
+
+        if ($vezesBipada > 0) {
+            // Consulta a bridge para saber quantas passagens são esperadas para este lote.
+            $passagensEsperadas = $this->loteService->contarFichasLote(
+                $apontamento->ordem_lote,
+                $apontamento->cod_peca,
+            );
+
+            if ($vezesBipada >= $passagensEsperadas) {
+                throw new BusinessException(
+                    "Pilha {$pilha} já atingiu o limite de {$passagensEsperadas} passagem(ns) neste lote.",
+                    422
+                );
+            }
+
+            // Bridge permite mais passagens; exige confirmação explícita do operário.
+            if (! $confirmar) {
+                throw new ConfirmacaoNecessariaException(
+                    "Pilha {$pilha} já foi bipada neste lote. Deseja registrar uma nova passagem?",
+                    $vezesBipada,
+                    $passagensEsperadas,
+                );
+            }
         }
 
         // Marco de tempo compartilhado: fim da ficha anterior = inicio desta

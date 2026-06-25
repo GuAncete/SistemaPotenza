@@ -56,6 +56,26 @@ class Handler extends ExceptionHandler
             return $this->errorResponse('Recurso não encontrado.', 404);
         }
 
+        if ($e instanceof ConfirmacaoNecessariaException) {
+            return response()->json([
+                'success'              => false,
+                'message'              => $e->getMessage(),
+                'requiresConfirmation' => true,
+                'passagensRealizadas'  => $e->passagensRealizadas,
+                'passagensEsperadas'   => $e->passagensEsperadas,
+            ], 409);
+        }
+
+        if ($e instanceof LoteCompletoException) {
+            return response()->json([
+                'success'       => false,
+                'message'       => $e->getMessage(),
+                'loteCompleto'  => true,
+                'pilhasBipadas' => $e->pilhasBipadas,
+                'totalPilhas'   => $e->totalPilhas,
+            ], 422);
+        }
+
         if ($e instanceof BusinessException) {
             return $this->errorResponse($e->getMessage(), $e->getStatusCode());
         }
