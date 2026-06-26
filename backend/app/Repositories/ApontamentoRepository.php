@@ -62,21 +62,24 @@ class ApontamentoRepository implements ApontamentoRepositoryInterface
         $query = Apontamento::query();
 
         if ($dataInicio || $dataFim) {
-            $query->whereDate('created_at', '>=', $dataInicio ?? $dataFim)
-                ->whereDate('created_at', '<=', $dataFim ?? $dataInicio);
-        } else {
-            $hoje = Carbon::today();
+            $inicio = Carbon::parse($dataInicio ?? $dataFim)->startOfDay();
+            $fim    = Carbon::parse($dataFim ?? $dataInicio)->endOfDay();
 
-            $query->where(function ($q) use ($hoje) {
-                $q->whereDate('created_at', $hoje)
-                    ->orWhereIn('status', [
-                        Apontamento::STATUS_EM_SETUP,
-                        Apontamento::STATUS_AGUARDANDO_PRODUCAO,
-                        Apontamento::STATUS_EM_PRODUCAO,
-                        Apontamento::STATUS_EM_PAUSA_SETUP,
-                        Apontamento::STATUS_EM_PAUSA_PRODUCAO,
-                    ]);
-            });
+            // Interseção de intervalos: aparece no dia se estava ativo em qualquer momento dele.
+            $query->where('setup_inicio', '<=', $fim)
+                ->where(function ($q) use ($inicio) {
+                    $q->whereNull('producao_fim')
+                      ->orWhere('producao_fim', '>=', $inicio);
+                });
+        } else {
+            $inicioHoje = Carbon::today()->startOfDay();
+            $fimHoje    = Carbon::today()->endOfDay();
+
+            $query->where('setup_inicio', '<=', $fimHoje)
+                ->where(function ($q) use ($inicioHoje) {
+                    $q->whereNull('producao_fim')
+                      ->orWhere('producao_fim', '>=', $inicioHoje);
+                });
         }
 
         if (! empty($filtros['operario_id']) || ! empty($filtros['maquina_id']) || ! empty($filtros['grupo_id'])) {
@@ -99,7 +102,7 @@ class ApontamentoRepository implements ApontamentoRepositoryInterface
 
         return $query
             ->with(['sessaoTrabalho.operario.user', 'sessaoTrabalho.maquina.etapaFluxo', 'fichas', 'pausas'])
-            ->latest()
+            ->orderBy('setup_inicio')
             ->get();
     }
 
