@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\Api\ManutencaoAdminController;
+use App\Http\Controllers\Api\ManutencaoPublicoController;
 use App\Http\Controllers\Api\ActivityLogController;
 use App\Http\Controllers\Api\ApontamentoController;
 use App\Http\Controllers\Api\DashboardController;
@@ -97,4 +99,16 @@ Route::middleware(['auth:sanctum', 'check_password_change', 'role:admin,funciona
     Route::put('/turnos/{diaSemana}', [TurnoController::class, 'update'])->middleware('module:turnos');
 
     Route::get('/admin/activity-logs', [ActivityLogController::class, 'index'])->middleware('module:logs');
+});
+
+Route::middleware(['auth:sanctum', 'check_password_change', 'role:gestor,admin,funcionario'])->group(function () {
+    Route::get('/manutencao/admin',       [ManutencaoAdminController::class, 'index']);
+    Route::get('/manutencao/admin/{id}',  [ManutencaoAdminController::class, 'show']);
+    Route::put('/manutencao/admin/{id}',  [ManutencaoAdminController::class, 'update']);
+});
+
+Route::middleware(['auth:sanctum', 'check_password_change', 'role:operario'])->group(function () {
+    Route::get('/manutencao',                        [ManutencaoPublicoController::class, 'index']);
+    Route::post('/manutencao/solicitar',             [ManutencaoPublicoController::class, 'solicitar']);
+    Route::post('/manutencao/{maquinaId}/solicitar', [ManutencaoPublicoController::class, 'solicitar']);
 });

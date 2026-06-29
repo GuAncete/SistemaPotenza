@@ -15,6 +15,8 @@ import { UsuariosSistemaPage }      from '@/pages/UsuariosSistemaPage'
 import { RotinasPage }              from '@/pages/RotinasPage'
 import { MaquinasDisponiveisPage }  from '@/pages/MaquinasDisponiveisPage'
 import { ApontamentoOperarioPage }  from '@/pages/ApontamentoOperarioPage'
+import { ManutencaoPainelPage }    from '@/pages/ManutencaoPainelPage'
+import { ManutencaoSolicitarPage } from '@/pages/ManutencaoSolicitarPage'
 import { AdminLayout }              from '@/layouts/AdminLayout'
 import { OperarioLayout }          from '@/layouts/OperarioLayout'
 import { ProtectedRoute }          from '@/components/ProtectedRoute'
@@ -78,6 +80,7 @@ function App() {
           <Route path="rotinas" element={
             <ProtectedRoute requiredRole={['admin']}><RotinasPage /></ProtectedRoute>
           } />
+          <Route path="manutencao" element={<ManutencaoPainelPage />} />
           <Route path="perfil" element={<AdminPerfilPage />} />
         </Route>
 
@@ -94,6 +97,9 @@ function App() {
           <Route path="maquinas"     element={<MaquinasDisponiveisPage />} />
           <Route path="apontamento"  element={<ApontamentoOperarioPage />} />
         </Route>
+
+        {/* Página pública de solicitação via QR code */}
+        <Route path="/manutencao/:maquinaId" element={<ManutencaoSolicitarPage />} />
 
         {/* Raiz e fallback */}
         <Route path="/"  element={<Navigate to="/login" replace />} />
