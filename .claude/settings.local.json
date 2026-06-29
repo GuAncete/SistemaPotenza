@@ -33,7 +33,8 @@
       "Bash(xargs grep -l \"segunda-passagem\\\\|segundo\")",
       "PowerShell(Get-Process *)",
       "PowerShell(Stop-Process *)",
-      "PowerShell(netstat *)"
+      "PowerShell(netstat *)",
+      "Bash(npm list *)"
     ]
   }
 }

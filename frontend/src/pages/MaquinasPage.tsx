@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import axios from 'axios'
 import { Cpu, CheckCircle2, XCircle, Loader2, Plus, ImageIcon, Pencil, QrCode, X, Download, Printer } from 'lucide-react'
-import QRCode from 'react-qr-code'
+import { QRCodeSVG } from 'qrcode.react'
 import { getMaquinas, type Maquina } from '@/api/maquinas'
 import { MaquinaFormModal } from '@/components/MaquinaFormModal'
 import { useAuth } from '@/hooks/useAuth'
@@ -265,7 +265,7 @@ export function MaquinasPage() {
             </div>
 
             <div ref={qrRef} className="bg-white rounded-xl p-4 flex items-center justify-center">
-              <QRCode value={qrUrl(qrMaquina)} size={220} />
+              <QRCodeSVG value={qrUrl(qrMaquina)} size={220} level="M" />
             </div>
 
             <p className="text-xs text-slate-500 text-center break-all">{qrUrl(qrMaquina)}</p>

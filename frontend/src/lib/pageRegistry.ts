@@ -15,4 +15,5 @@ export const PAGE_REGISTRY: PageOption[] = [
   { value: '/admin/logs',                           label: 'Log de Atividades' },
   { value: '/admin/usuarios',                       label: 'Usuários do Sistema' },
   { value: '/admin/rotinas',                        label: 'Rotinas' },
+  { value: '/admin/manutencao/painel',              label: 'Painel de Manutenção' },
 ]
