@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Wrench, Loader2, AlertCircle, X, CalendarDays, ArrowUpDown } from 'lucide-react'
+import { Wrench, Loader2, AlertCircle, X, CalendarDays, ArrowUpDown, Headphones, CheckCircle2 } from 'lucide-react'
 import {
   getOrdensManutencao,
   type OrdemManutencao,
   type StatusOrdem,
   type Prioridade,
 } from '@/api/manutencao'
+import { chamarSuporteManutencao } from '@/api/suporte'
 import { OrdemManutencaoModal } from '@/components/manutencao/OrdemManutencaoModal'
 
 const PRIORIDADE_ORDER: Prioridade[] = ['critica', 'alta', 'normal', 'baixa']
@@ -66,6 +67,8 @@ export function ManutencaoPainelPage() {
   const [loading, setLoading]                   = useState(true)
   const [erroApi, setErroApi]                   = useState<string | null>(null)
   const [ordemSelecionada, setOrdemSelecionada] = useState<OrdemManutencao | null>(null)
+
+  const [suporteStatus, setSuporteStatus] = useState<'idle' | 'loading' | 'ok'>('idle')
 
   const [filtroStatus, setFiltroStatus]   = useState<StatusOrdem | null>(null)
   const [filtroData, setFiltroData]       = useState<string>('')
@@ -164,6 +167,18 @@ export function ManutencaoPainelPage() {
   const mostrarFlatData = filtroStatus === 'concluida' && ordenacao === 'data'
   const temFiltrosAtivos = filtroStatus !== null || filtroData !== '' || filtroMaquina !== '' || filtroSetor !== ''
 
+  async function handleChamarSuporte() {
+    if (suporteStatus === 'loading') return
+    setSuporteStatus('loading')
+    try {
+      await chamarSuporteManutencao()
+      setSuporteStatus('ok')
+      setTimeout(() => setSuporteStatus('idle'), 3000)
+    } catch {
+      setSuporteStatus('idle')
+    }
+  }
+
   function handleLimpar() {
     setFiltroStatus(null)
     setFiltroData('')
@@ -179,11 +194,30 @@ export function ManutencaoPainelPage() {
   return (
     <div className="space-y-5">
       {/* Cabeçalho */}
-      <div className="flex items-center gap-3">
-        <div className="w-9 h-9 rounded-lg bg-[#00aa84]/15 flex items-center justify-center shrink-0">
-          <Wrench className="w-5 h-5 text-[#00aa84]" />
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-lg bg-[#00aa84]/15 flex items-center justify-center shrink-0">
+            <Wrench className="w-5 h-5 text-[#00aa84]" />
+          </div>
+          <h1 className="text-xl font-bold text-white">Painel de Manutenção</h1>
         </div>
-        <h1 className="text-xl font-bold text-white">Painel de Manutenção</h1>
+
+        <button
+          type="button"
+          onClick={handleChamarSuporte}
+          disabled={suporteStatus === 'loading'}
+          className={[
+            'flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium border transition-all',
+            suporteStatus === 'ok'
+              ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
+              : 'bg-orange-500/10 text-orange-400 border-orange-500/20 hover:bg-orange-500/20 disabled:opacity-50 disabled:cursor-not-allowed',
+          ].join(' ')}
+        >
+          {suporteStatus === 'loading' && <Loader2 className="w-4 h-4 animate-spin" />}
+          {suporteStatus === 'ok'      && <CheckCircle2 className="w-4 h-4" />}
+          {suporteStatus === 'idle'    && <Headphones className="w-4 h-4" />}
+          {suporteStatus === 'ok' ? 'Suporte avisado!' : 'Chamar Suporte'}
+        </button>
       </div>
 
       {/* Filtros */}

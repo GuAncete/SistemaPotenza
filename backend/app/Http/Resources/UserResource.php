@@ -24,6 +24,7 @@ class UserResource extends JsonResource
                 'id'        => $rotina->id,
                 'slug'      => $rotina->slug,
                 'nome'      => $rotina->nome,
+                'pagina'    => $rotina->pagina,
                 'parent_id' => $rotina->parent_id,
             ]),
             'operario'             => $this->when(

@@ -15,6 +15,7 @@ class ChamadaSuporte extends Model
         'sessao_trabalho_id',
         'maquina_id',
         'operario_id',
+        'origem',
         'visualizado_em',
     ];
 

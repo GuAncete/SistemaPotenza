@@ -3,13 +3,18 @@ import type { ApiEnvelope } from './auth'
 
 export interface ChamadaSuporte {
   id: number
+  origem: 'operario' | 'manutencao'
   criado_em: string
-  maquina: { id: number; nome: string }
-  operario: { id: number; nome: string }
+  maquina: { id: number; nome: string } | null
+  operario: { id: number; nome: string } | null
 }
 
 export async function chamarSuporte(): Promise<void> {
   await apiClient.post('/apontamento/chamar-suporte')
+}
+
+export async function chamarSuporteManutencao(): Promise<void> {
+  await apiClient.post('/manutencao/admin/chamar-suporte')
 }
 
 export async function getChamadasSuporte(): Promise<ChamadaSuporte[]> {

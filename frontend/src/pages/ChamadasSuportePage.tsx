@@ -133,12 +133,20 @@ export function ChamadasSuportePage() {
 
               <div className="flex-1 min-w-0 space-y-1">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="flex items-center gap-1.5 text-sm font-semibold text-white">
-                    <Cpu className="w-3.5 h-3.5 text-slate-500 shrink-0" />
-                    {c.maquina.nome}
-                  </span>
-                  <span className="text-slate-600">·</span>
-                  <span className="text-sm text-slate-400">{c.operario.nome}</span>
+                  {c.origem === 'manutencao' ? (
+                    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-semibold bg-blue-500/15 text-blue-400">
+                      Manutenção
+                    </span>
+                  ) : (
+                    <>
+                      <span className="flex items-center gap-1.5 text-sm font-semibold text-white">
+                        <Cpu className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                        {c.maquina?.nome ?? '—'}
+                      </span>
+                      <span className="text-slate-600">·</span>
+                      <span className="text-sm text-slate-400">{c.operario?.nome ?? '—'}</span>
+                    </>
+                  )}
                 </div>
                 <div className="flex items-center gap-1.5 text-xs text-slate-500">
                   <Clock className="w-3 h-3" />

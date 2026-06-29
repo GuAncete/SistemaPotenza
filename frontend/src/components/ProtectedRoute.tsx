@@ -20,7 +20,7 @@ export function ProtectedRoute({ children, requiredRole, requiredRotina }: Prote
   }
 
   if (requiredRotina && user?.role === 'funcionario' && !user.rotinas?.some((r) => r.slug === requiredRotina)) {
-    return <Navigate to="/login" replace />
+    return <Navigate to="/admin/sem-acesso" replace />
   }
 
   return <>{children}</>

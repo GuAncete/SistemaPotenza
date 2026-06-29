@@ -85,8 +85,8 @@ Route::middleware(['auth:sanctum', 'check_password_change', 'role:gestor,admin,f
     Route::get('/menu', [RotinaController::class, 'menu']);
 
     Route::get('/admin/dashboard',          [DashboardController::class, 'index'])->middleware('module:dashboard');
-    Route::get('/admin/chamadas-suporte',   [ChamadaSuporteController::class, 'index']);
-    Route::put('/admin/chamadas-suporte/{id}/visualizar', [ChamadaSuporteController::class, 'visualizar']);
+    Route::get('/admin/chamadas-suporte',   [ChamadaSuporteController::class, 'index'])->middleware('module:chamadas_suporte');
+    Route::put('/admin/chamadas-suporte/{id}/visualizar', [ChamadaSuporteController::class, 'visualizar'])->middleware('module:chamadas_suporte');
     Route::get('/admin/relatorio-turno',    [RelatorioTurnoController::class, 'index'])->middleware('module:relatorios');
     Route::get('/admin/relatorio-maquinas', [RelatorioMaquinaController::class, 'index'])->middleware('module:relatorios');
     Route::get('/admin/relatorio-maquinas/filtros', [RelatorioMaquinaController::class, 'filtros'])->middleware('module:relatorios');
@@ -103,6 +103,8 @@ Route::middleware(['auth:sanctum', 'check_password_change', 'role:gestor,admin,f
         Route::post('/{ordemId}/servicos',                    [ManutencaoServicosController::class, 'store']);
         Route::delete('/{ordemId}/servicos/{servicoId}',      [ManutencaoServicosController::class, 'destroy']);
     });
+
+    Route::post('/manutencao/admin/chamar-suporte', [ChamadaSuporteController::class, 'storeManutencao']);
 });
 
 Route::middleware(['auth:sanctum', 'check_password_change', 'role:gestor,admin,funcionario', 'module:kanban'])->prefix('kanban')->group(function () {

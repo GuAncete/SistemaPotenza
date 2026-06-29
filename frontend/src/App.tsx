@@ -22,6 +22,7 @@ import { ManutencaoQrSolicitarPage }   from '@/pages/ManutencaoQrSolicitarPage'
 import { AdminLayout }              from '@/layouts/AdminLayout'
 import { OperarioLayout }          from '@/layouts/OperarioLayout'
 import { ProtectedRoute }          from '@/components/ProtectedRoute'
+import { AdminHome }               from '@/components/AdminHome'
 
 function App() {
   return (
@@ -48,7 +49,7 @@ function App() {
             </ProtectedRoute>
           }
         >
-          <Route index element={<Navigate to="dashboard" replace />} />
+          <Route index element={<AdminHome />} />
           <Route path="dashboard" element={
             <ProtectedRoute requiredRotina="dashboard"><DashboardPage /></ProtectedRoute>
           } />
@@ -85,7 +86,15 @@ function App() {
           <Route path="manutencao/painel" element={
             <ProtectedRoute requiredRotina="manutencao_painel"><ManutencaoPainelPage /></ProtectedRoute>
           } />
-          <Route path="chamadas-suporte" element={<ChamadasSuportePage />} />
+          <Route path="chamadas-suporte" element={
+            <ProtectedRoute requiredRotina="chamadas_suporte"><ChamadasSuportePage /></ProtectedRoute>
+          } />
+          <Route path="sem-acesso" element={
+            <div className="flex flex-col items-center justify-center h-full py-32 text-center">
+              <p className="text-2xl font-bold text-white mb-2">Sem permissão</p>
+              <p className="text-slate-400 text-sm">Você não tem acesso a esta página.<br />Solicite ao administrador para liberar o módulo.</p>
+            </div>
+          } />
           <Route path="perfil" element={<AdminPerfilPage />} />
         </Route>
 

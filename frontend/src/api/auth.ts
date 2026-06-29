@@ -4,6 +4,7 @@ export interface UserRotina {
   id: number
   slug: string
   nome: string
+  pagina: string | null
   parent_id: number | null
 }
 

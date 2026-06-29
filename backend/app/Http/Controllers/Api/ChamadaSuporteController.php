@@ -32,9 +32,19 @@ class ChamadaSuporteController extends Controller
             'sessao_trabalho_id' => $sessao->id,
             'maquina_id'         => $sessao->maquina_id,
             'operario_id'        => $operario->id,
+            'origem'             => 'operario',
         ]);
 
         return $this->successResponse($chamada, 'Suporte solicitado.', 201);
+    }
+
+    public function storeManutencao(): JsonResponse
+    {
+        $chamada = ChamadaSuporte::create([
+            'origem' => 'manutencao',
+        ]);
+
+        return $this->successResponse($chamada, 'Suporte solicitado pela manutenção.', 201);
     }
 
     public function index(): JsonResponse
@@ -45,9 +55,10 @@ class ChamadaSuporteController extends Controller
             ->get()
             ->map(fn ($c) => [
                 'id'        => $c->id,
+                'origem'    => $c->origem ?? 'operario',
                 'criado_em' => $c->created_at->toISOString(),
-                'maquina'   => ['id' => $c->maquina->id, 'nome' => $c->maquina->nome],
-                'operario'  => ['id' => $c->operario->id, 'nome' => $c->operario->nome],
+                'maquina'   => $c->maquina ? ['id' => $c->maquina->id, 'nome' => $c->maquina->nome] : null,
+                'operario'  => $c->operario ? ['id' => $c->operario->id, 'nome' => $c->operario->nome] : null,
             ]);
 
         return $this->successResponse($chamadas);
