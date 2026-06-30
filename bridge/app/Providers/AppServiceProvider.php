@@ -2,7 +2,6 @@
 
 namespace App\Providers;
 
-use App\Services\FichaTecnica\FakeFichaTecnicaService;
 use App\Services\FichaTecnica\FichaTecnicaService;
 use App\Services\FichaTecnica\FichaTecnicaServiceInterface;
 use Illuminate\Support\ServiceProvider;
@@ -14,13 +13,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        $this->app->bind(FichaTecnicaServiceInterface::class, function () {
-            if (empty(env('DB_HOST'))) {
-                return new FakeFichaTecnicaService();
-            }
-
-            return new FichaTecnicaService();
-        });
+        $this->app->bind(FichaTecnicaServiceInterface::class, FichaTecnicaService::class);
     }
 
     /**

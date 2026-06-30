@@ -40,7 +40,13 @@
       "Bash(xargs grep -l \"ordem\\\\|lote\")",
       "Bash(xargs grep -l \"tooltip\\\\|Tooltip\")",
       "Bash(xargs grep -l \"ficha\\\\|Ficha\")",
-      "Bash(xargs grep -l \"Apontamento\\\\|Ficha\")"
+      "Bash(xargs grep -l \"Apontamento\\\\|Ficha\")",
+      "Bash(grep -r \"\\\\/\\\\/ TODO\\\\|\\\\/\\\\/ FIXME\\\\|\\\\/\\\\/ HACK\\\\|fake\\\\|mock\\\\|stub\\\\|dummy\" \"C:\\\\Gustavo\\\\Potenza\\\\SistemaApontamento\\\\frontend\\\\src\")",
+      "Bash(Remove-Item \"C:\\\\Gustavo\\\\Potenza\\\\SistemaApontamento\\\\bridge\\\\app\\\\Services\\\\FichaTecnica\\\\FakeFichaTecnicaService.php\" -Force)",
+      "Bash(Remove-Item \"C:\\\\Gustavo\\\\Potenza\\\\SistemaApontamento\\\\backend\\\\app\\\\Services\\\\Lote\\\\MockLoteService.php\" -Force)",
+      "Bash(Remove-Item \"C:\\\\Gustavo\\\\Potenza\\\\SistemaApontamento\\\\backend\\\\tests\\\\Feature\\\\FluxoCompletoTest.php\" -Force)",
+      "Bash(Remove-Item \"C:\\\\Gustavo\\\\Potenza\\\\SistemaApontamento\\\\backend\\\\tests\\\\Feature\\\\AvanceLoteKanbanTest.php\" -Force)",
+      "Bash(Remove-Item \"C:\\\\Gustavo\\\\Potenza\\\\SistemaApontamento\\\\backend\\\\tests\\\\Feature\\\\LoteNaoAvancaTest.php\" -Force)"
     ]
   }
 }
