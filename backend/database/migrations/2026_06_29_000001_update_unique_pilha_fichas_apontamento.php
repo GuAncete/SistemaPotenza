@@ -31,6 +31,17 @@ return new class extends Migration
             DB::statement("ALTER TABLE fichas_apontamento DROP CONSTRAINT \"{$existing->conname}\"");
         }
 
+        // Remove bipagens acidentais duplicadas dentro do mesmo apontamento,
+        // mantendo apenas o registro mais recente (maior id) de cada grupo.
+        DB::statement("
+            DELETE FROM fichas_apontamento
+            WHERE id NOT IN (
+                SELECT MAX(id)
+                FROM fichas_apontamento
+                GROUP BY apontamento_id, cod_peca, pilha
+            )
+        ");
+
         Schema::table('fichas_apontamento', function (Blueprint $table) {
             // Permite bipar a mesma pilha de variantes do mesmo produto (mesmo prefixo, cod_peca diferente)
             $table->unique(['apontamento_id', 'cod_peca', 'pilha'], 'unique_pilha_cod_peca_por_apontamento');
